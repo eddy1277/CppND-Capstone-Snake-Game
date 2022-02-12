@@ -51,15 +51,14 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 }
 
 void Game::PlaceFood() {
-  int x, y;
+  Snake_Point point;
   while (true) {
-    x = random_w(engine);
-    y = random_h(engine);
+    point.x = random_w(engine);
+    point.y = random_h(engine);
     // Check that the location is not occupied by a snake item before placing
     // food.
-    if (!snake.SnakeCell(x, y)) {
-      food.x = x;
-      food.y = y;
+    if (!snake.SnakeCell(point)) {
+      food = point;
       return;
     }
   }
@@ -79,7 +78,7 @@ void Game::Update() {
     PlaceFood();
     // Grow snake and increase speed.
     snake.GrowBody();
-    snake.speed += 0.02;
+    snake.speed = 0.16;//+= 0.02;
   }
 }
 

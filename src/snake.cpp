@@ -3,12 +3,12 @@
 #include <iostream>
 
 void Snake::Update() {
-  SDL_Point prev_cell{
+  Snake_Point prev_cell{
       static_cast<int>(head_x),
       static_cast<int>(
           head_y)};  // We first capture the head's cell before updating.
   UpdateHead();
-  SDL_Point current_cell{
+  Snake_Point current_cell{
       static_cast<int>(head_x),
       static_cast<int>(head_y)};  // Capture the head's cell after updating.
 
@@ -21,21 +21,21 @@ void Snake::Update() {
 
 void Snake::UpdateHead() {
   switch (direction) {
-    case Direction::kUp:
-      head_y -= speed;
-      break;
+  case Direction::kUp:
+    head_y -= speed;
+    break;
 
-    case Direction::kDown:
-      head_y += speed;
-      break;
+  case Direction::kDown:
+    head_y += speed;
+    break;
 
-    case Direction::kLeft:
-      head_x -= speed;
-      break;
+  case Direction::kLeft:
+    head_x -= speed;
+    break;
 
-    case Direction::kRight:
-      head_x += speed;
-      break;
+  case Direction::kRight:
+    head_x += speed;
+    break;
   }
 
   // Wrap the Snake around to the beginning if going off of the screen.
@@ -43,37 +43,35 @@ void Snake::UpdateHead() {
   head_y = fmod(head_y + grid_height, grid_height);
 }
 
-void Snake::UpdateBody(SDL_Point &current_head_cell, SDL_Point &prev_head_cell) {
-  // Add previous head location to vector
+void Snake::UpdateBody(Snake_Point &current_head_cell, Snake_Point &prev_head_cell) {
+  // Add previous head location to vector and unordered_set
   body.push_back(prev_head_cell);
+  body_set.insert(prev_head_cell);
 
   if (!growing) {
-    // Remove the tail from the vector.
+    // Remove the tail from the vector and unordered_set
+    body_set.erase(*body.begin());
     body.erase(body.begin());
   } else {
     growing = false;
     size++;
   }
 
-  // Check if the snake has died.
-  for (auto const &item : body) {
-    if (current_head_cell.x == item.x && current_head_cell.y == item.y) {
+  // Check if the snake has died using hash table
+  if (body_set.find(current_head_cell) != body_set.end()) {
       alive = false;
-    }
   }
 }
 
 void Snake::GrowBody() { growing = true; }
 
-// Inefficient method to check if cell is occupied by snake.
-bool Snake::SnakeCell(int x, int y) {
-  if (x == static_cast<int>(head_x) && y == static_cast<int>(head_y)) {
+// Check if cell is occupied by snake using hash table
+bool Snake::SnakeCell(const Snake_Point &point) const {
+  if (point.x == static_cast<int>(head_x) && point.y == static_cast<int>(head_y)) {
     return true;
   }
-  for (auto const &item : body) {
-    if (x == item.x && y == item.y) {
+  if (body_set.find(point) != body_set.end()) {
       return true;
-    }
   }
   return false;
 }
