@@ -9,11 +9,12 @@
 
 class Game {
 public:
-  Game(std::size_t grid_width, std::size_t grid_height);
+  Game(std::size_t grid_width, std::size_t grid_height, std::string player);
   void Run(Controller const &controller, Renderer &renderer,
            std::size_t target_frame_duration);
   int GetScore() const;
   int GetSize() const;
+  std::string GetPlayer() const;
 
 private:
   Snake snake;
@@ -25,6 +26,7 @@ private:
   std::uniform_int_distribution<int> random_h;
 
   int score{0};
+  std::string player;
 
   void PlaceFood();
   void Update();
