@@ -3,6 +3,7 @@
 
 #include "SDL.h"
 #include "snake.h"
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@ public:
            const std::size_t grid_width, const std::size_t grid_height);
   ~Renderer();
 
-  void Render(Snake const snake, Snake_Point const &food);
+  void Render(std::shared_ptr<Snake> snake, Snake_Point const &food);
   void UpdateWindowTitle(std::string name, int score, int fps);
 
 private:

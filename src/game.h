@@ -18,7 +18,7 @@ public:
   std::string GetName() const;
 
 private:
-  std::unique_ptr<Snake> snake;
+  std::shared_ptr<Snake> snake;
   Snake_Point food;
 
   std::random_device dev;
