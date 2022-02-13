@@ -1,5 +1,10 @@
-#include "game.h"
+#include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include "game.h"
 #include "SDL.h"
 
 Game::Game(std::size_t grid_width, std::size_t grid_height, std::string player)
@@ -81,6 +86,43 @@ void Game::Update() {
     snake.GrowBody();
     snake.speed = 0.16;//+= 0.02;
   }
+}
+
+void Game::UpdateRecords() {
+  // initialize records_map
+  std::unordered_map<std::string, int> records_map;
+  records_map.insert({GetPlayer(), GetScore()});
+
+  std::string line, key, value;
+  int ivalue;
+  std::fstream filestream;
+  // open the record file if exists, otherwise create an empty file
+  filestream.open("records.txt", std::fstream::in);
+  // read line by line to generate the vector records 
+  while (std::getline(filestream, line)) {
+    std::replace(line.begin(), line.end(), ' ', '_');
+    std::replace(line.begin(), line.end(), ':', ' ');
+    std::istringstream linestream(line);
+    linestream >> key >> value;
+    std::replace(key.begin(), key.end(), '_', ' ');
+    ivalue = std::stoi(value);
+    if (records_map.find(key) != records_map.end()) {
+      records_map[key] = (records_map[key]>ivalue ? records_map[key] : ivalue);
+    }
+    else {
+      records_map.insert({key, ivalue});
+    }
+  }
+  filestream.close();
+  std::vector<std::pair<std::string, int>> records_vector(records_map.begin(), records_map.end());
+  std::sort(records_vector.begin(), records_vector.end(), [](auto &left, auto &right) { return left.second > right.second; });
+  
+  // write the vector records into the file line by line
+  filestream.open("records.txt", std::fstream::out | std::fstream::trunc);
+  for (auto &x : records_vector) {
+    filestream << x.first << ":" << x.second << "\n";
+  }
+  filestream.close();
 }
 
 int Game::GetScore() const { return score; }

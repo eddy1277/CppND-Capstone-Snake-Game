@@ -15,6 +15,7 @@ public:
   int GetScore() const;
   int GetSize() const;
   std::string GetPlayer() const;
+  void UpdateRecords();
 
 private:
   Snake snake;
