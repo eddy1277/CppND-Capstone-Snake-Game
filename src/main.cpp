@@ -1,7 +1,7 @@
-#include <iostream>
 #include "controller.h"
 #include "game.h"
 #include "renderer.h"
+#include <iostream>
 
 int main() {
   constexpr std::size_t kFramesPerSecond{60};
@@ -13,10 +13,10 @@ int main() {
 
   Renderer renderer(kScreenWidth, kScreenHeight, kGridWidth, kGridHeight);
   Controller controller;
-  std::string player;
+  std::string name;
   std::cout << "Please enter the player name:\n";
-  std::getline(std::cin, player);
-  Game game(kGridWidth, kGridHeight, player);
+  std::getline(std::cin, name);
+  Game game(kGridWidth, kGridHeight, name);
   game.Run(controller, renderer, kMsPerFrame);
   std::cout << "Game has terminated successfully!\n";
   std::cout << "Score: " << game.GetScore() << "\n";

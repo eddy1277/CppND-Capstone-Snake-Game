@@ -2,6 +2,7 @@
 #define SNAKE_H
 
 #include "SDL.h"
+#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -32,19 +33,23 @@ class Snake {
 public:
   enum class Direction { kUp, kDown, kLeft, kRight };
 
-  Snake(int grid_width, int grid_height)
+  Snake(int grid_width, int grid_height, std::string name)
       : grid_width(grid_width), 
         grid_height(grid_height),
         head_x(grid_width / 2), 
-        head_y(grid_height / 2) {}
+        head_y(grid_height / 2),
+        name(name) {}
 
   void Update();
-
-  void GrowBody();
   bool SnakeCell(const Snake_Point &point) const;
 
-  Direction direction = Direction::kUp;
+  // setters and getters
+  void GrowBody() { growing = true; }
+  void AddScore() { score++; }
+  int GetSnakeScore() const { return score; };
+  std::string GetSnakeName() const { return name; };
 
+  Direction direction = Direction::kUp;
   float speed{0.1f};
   int size{1};
   bool alive{true};
@@ -60,6 +65,8 @@ private:
   bool growing{false};
   int grid_width;
   int grid_height;
+  int score{0};
+  std::string name;
 };
 
 #endif

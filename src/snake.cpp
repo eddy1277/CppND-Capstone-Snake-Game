@@ -3,17 +3,10 @@
 #include <iostream>
 
 void Snake::Update() {
-  Snake_Point prev_cell{
-      static_cast<int>(head_x),
-      static_cast<int>(
-          head_y)};  // We first capture the head's cell before updating.
+  Snake_Point prev_cell{static_cast<int>(head_x), static_cast<int>(head_y)};  // We first capture the head's cell before updating.
   UpdateHead();
-  Snake_Point current_cell{
-      static_cast<int>(head_x),
-      static_cast<int>(head_y)};  // Capture the head's cell after updating.
-
-  // Update all of the body vector items if the snake head has moved to a new
-  // cell.
+  Snake_Point current_cell{static_cast<int>(head_x), static_cast<int>(head_y)};  // Capture the head's cell after updating.
+  // Update all of the body vector items if the snake head has moved to a new cell.
   if (current_cell.x != prev_cell.x || current_cell.y != prev_cell.y) {
     UpdateBody(current_cell, prev_cell);
   }
@@ -62,8 +55,6 @@ void Snake::UpdateBody(Snake_Point &current_head_cell, Snake_Point &prev_head_ce
       alive = false;
   }
 }
-
-void Snake::GrowBody() { growing = true; }
 
 // Check if cell is occupied by snake using hash table
 bool Snake::SnakeCell(const Snake_Point &point) const {

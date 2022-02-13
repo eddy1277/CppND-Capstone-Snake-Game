@@ -1,18 +1,17 @@
+#include "game.h"
+#include "SDL.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include "game.h"
-#include "SDL.h"
 
-Game::Game(std::size_t grid_width, std::size_t grid_height, std::string player)
-    : snake(grid_width, grid_height),
+Game::Game(std::size_t grid_width, std::size_t grid_height, std::string name)
+    : snake(new Snake(grid_width, grid_height, name)), 
       engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
-      random_h(0, static_cast<int>(grid_height - 1)),
-      player(player) {
+      random_h(0, static_cast<int>(grid_height - 1)) {
   PlaceFood();
 }
 
@@ -29,9 +28,9 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     frame_start = SDL_GetTicks();
 
     // Input, Update, Render - the main game loop.
-    controller.HandleInput(running, snake);
+    controller.HandleInput(running, *snake);
     Update();
-    renderer.Render(snake, food);
+    renderer.Render(*snake, food);
 
     frame_end = SDL_GetTicks();
 
@@ -42,7 +41,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
     // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(player, score, frame_count);
+      renderer.UpdateWindowTitle(GetName(), GetScore(), frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
@@ -61,9 +60,8 @@ void Game::PlaceFood() {
   while (true) {
     point.x = random_w(engine);
     point.y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing
-    // food.
-    if (!snake.SnakeCell(point)) {
+    // Check that the location is not occupied by a snake item before placing food.
+    if (!snake->SnakeCell(point)) {
       food = point;
       return;
     }
@@ -71,34 +69,35 @@ void Game::PlaceFood() {
 }
 
 void Game::Update() {
-  if (!snake.alive) return;
+  if (!snake->alive)
+    return;
 
-  snake.Update();
+  snake->Update();
 
-  int new_x = static_cast<int>(snake.head_x);
-  int new_y = static_cast<int>(snake.head_y);
+  int new_x = static_cast<int>(snake->head_x);
+  int new_y = static_cast<int>(snake->head_y);
 
   // Check if there's food over here
   if (food.x == new_x && food.y == new_y) {
-    score++;
+    snake->AddScore();
     PlaceFood();
     // Grow snake and increase speed.
-    snake.GrowBody();
-    snake.speed = 0.16;//+= 0.02;
+    snake->GrowBody();
+    snake->speed = 0.16; //+= 0.02;
   }
 }
 
 void Game::UpdateRecords() {
   // initialize records_map
   std::unordered_map<std::string, int> records_map;
-  records_map.insert({GetPlayer(), GetScore()});
+  records_map.insert({GetName(), GetScore()});
 
   std::string line, key, value;
   int ivalue;
   std::fstream filestream;
   // open the record file if exists, otherwise create an empty file
   filestream.open("records.txt", std::fstream::in);
-  // read line by line to generate the vector records 
+  // read line by line to generate the vector records
   while (std::getline(filestream, line)) {
     std::replace(line.begin(), line.end(), ' ', '_');
     std::replace(line.begin(), line.end(), ':', ' ');
@@ -107,16 +106,18 @@ void Game::UpdateRecords() {
     std::replace(key.begin(), key.end(), '_', ' ');
     ivalue = std::stoi(value);
     if (records_map.find(key) != records_map.end()) {
-      records_map[key] = (records_map[key]>ivalue ? records_map[key] : ivalue);
-    }
-    else {
+      records_map[key] =
+          (records_map[key] > ivalue ? records_map[key] : ivalue);
+    } else {
       records_map.insert({key, ivalue});
     }
   }
   filestream.close();
-  std::vector<std::pair<std::string, int>> records_vector(records_map.begin(), records_map.end());
-  std::sort(records_vector.begin(), records_vector.end(), [](auto &left, auto &right) { return left.second > right.second; });
-  
+  std::vector<std::pair<std::string, int>> records_vector(records_map.begin(),
+                                                          records_map.end());
+  std::sort(records_vector.begin(), records_vector.end(),
+            [](auto &left, auto &right) { return left.second > right.second; });
+
   // write the vector records into the file line by line
   filestream.open("records.txt", std::fstream::out | std::fstream::trunc);
   for (auto &x : records_vector) {
@@ -125,6 +126,6 @@ void Game::UpdateRecords() {
   filestream.close();
 }
 
-int Game::GetScore() const { return score; }
-int Game::GetSize() const { return snake.size; }
-std::string Game::GetPlayer() const { return player; }
+int Game::GetSize() const { return snake->size; }
+int Game::GetScore() const { return snake->GetSnakeScore(); }
+std::string Game::GetName() const { return snake->GetSnakeName(); }
