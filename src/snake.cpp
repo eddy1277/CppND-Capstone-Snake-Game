@@ -7,31 +7,6 @@ Snake::Snake(int grid_width, int grid_height, float head_x, float head_y,
     : grid_width(grid_width), grid_height(grid_height), head_x(head_x),
       head_y(head_y), name(name) {}
 
-Snake::Snake(const Snake &source) {
-  grid_width = source.grid_width;
-  grid_height = source.grid_height;
-  head_x = source.head_x;
-  head_y = source.head_y;
-  name = source.name;
-}
-
-Snake::Snake(Snake &&source) {
-  grid_width = source.grid_width;
-  grid_height = source.grid_height;
-  head_x = source.head_x;
-  head_y = source.head_y;
-  name = source.name;
-}
-
-Snake Snake::operator=(Snake &&source) {
-  grid_width = source.grid_width;
-  grid_height = source.grid_height;
-  head_x = source.head_x;
-  head_y = source.head_y;
-  name = source.name;
-  return *this;
-}
-
 void Snake::Update() {
   Snake_Point prev_cell{
       static_cast<int>(head_x),

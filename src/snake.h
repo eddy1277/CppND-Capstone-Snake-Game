@@ -31,15 +31,6 @@ public:
   Snake(int grid_width, int grid_height, float head_x, float head_y,
         std::string name);
 
-  // copy constructor
-  Snake(const Snake &source);
-
-  // move constructor
-  Snake(Snake &&source);
-
-  // move assigment operator
-  Snake operator=(Snake &&source);
-
   void Update();
   bool SnakeCell(const Snake_Point &point) const;
 

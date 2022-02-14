@@ -81,7 +81,7 @@ void Game::PlaceFood() {
     // Check that the location is not occupied by a snake item before placing
     // food.
     for (std::size_t i = 0; i < players; ++i) {
-      if (snakes.at(i)->SnakeCell(point)) {
+      if (snakes.at(i)->alive && snakes.at(i)->SnakeCell(point)) {
         occupied = true;
       }
     }
@@ -93,11 +93,10 @@ void Game::PlaceFood() {
 }
 
 void Game::Update() {
-  if (!CheckAlive()) // all snakes die
-    return;
-
+  bool all_dead = true;  
   for (std::size_t i = 0; i < players; ++i) {
     if (snakes.at(i)->alive) {
+      all_dead = false;  
       snakes.at(i)->Update();
       int new_x = static_cast<int>(snakes.at(i)->head_x);
       int new_y = static_cast<int>(snakes.at(i)->head_y);
@@ -111,6 +110,7 @@ void Game::Update() {
       }
     }
   }
+  if (all_dead) return;
 }
 
 void Game::UpdateRecords() {
@@ -177,12 +177,4 @@ std::vector<std::pair<std::string, int>> Game::GetResults() const {
     results.push_back({names.at(i), scores.at(i)});
   }
   return results;
-}
-
-bool Game::CheckAlive() const {
-  for (std::size_t i = 0; i < players; ++i) {
-    if (snakes.at(i)->alive)
-      return true;
-  }
-  return false;
 }

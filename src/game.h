@@ -18,7 +18,6 @@ public:
   std::vector<int> GetScores() const;
   std::vector<std::string> GetNames() const;
   std::vector<std::pair<std::string, int>> GetResults() const;
-  bool CheckAlive() const;
 
 private:
   std::vector<std::shared_ptr<Snake>> snakes; // vector of shared pointers
