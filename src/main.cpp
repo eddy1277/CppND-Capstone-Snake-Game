@@ -2,6 +2,7 @@
 #include "game.h"
 #include "renderer.h"
 #include <iostream>
+#include <tuple>
 
 int main() {
   constexpr std::size_t kFramesPerSecond{60};
@@ -11,16 +12,45 @@ int main() {
   constexpr std::size_t kGridWidth{32};
   constexpr std::size_t kGridHeight{32};
 
-  Renderer renderer(kScreenWidth, kScreenHeight, kGridWidth, kGridHeight);
-  Controller controller;
-  std::string name;
-  std::cout << "Please enter the player name:\n";
-  std::getline(std::cin, name);
-  Game game(kGridWidth, kGridHeight, name);
+  std::size_t kPlayers;
+  std::string line;
+  std::vector<std::string> names;
+  std::cout << "Please select the game mode: 1 for single player mode, 2 for double player mode:\n";
+  do
+  {
+    std::getline(std::cin, line);
+    try
+    {
+        kPlayers = std::stoi(line);
+    }
+    catch(...)
+    {
+        std::cerr << "Invalid input. Please select again.\n";
+        kPlayers = 0;
+    }
+  } while (kPlayers != 1 && kPlayers != 2);
+  
+  std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> config = {
+      std::tuple("blue", "left", "right", "up", "down"), std::tuple("green", "z", "c", "s", "x")
+  };
+  for (std::size_t i = 0; i < kPlayers; ++i) {
+    auto [c, l, r, u, d] = config.at(i);
+    std::cout << "The head of snake " << (i+1) << " has color " << c << ".\n";
+    std::cout << "The Left, Right, Up, Down moves are controlled by keys " << l << ", " << r << ", " << u << ", " << d << ".\n";
+    std::cout << "Please enter the name of player " << (i + 1) << ":\n";
+    std::getline(std::cin, line);
+    names.push_back(line);
+  }
+
+  Game game(kGridWidth, kGridHeight, kPlayers, names);
+  Renderer renderer(kScreenWidth, kScreenHeight, kGridWidth, kGridHeight,
+                    kPlayers);
+  Controller controller(kPlayers);
   game.Run(controller, renderer, kMsPerFrame);
   std::cout << "Game has terminated successfully!\n";
-  std::cout << "Score: " << game.GetScore() << "\n";
-  std::cout << "Size: " << game.GetSize() << "\n";
+  for (auto &x : game.GetResults()) {
+    std::cout << x.first << "'s Score: " << x.second << "\n";
+  }
   game.UpdateRecords();
   return 0;
 }

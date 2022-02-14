@@ -10,11 +10,11 @@
 class Renderer {
 public:
   Renderer(const std::size_t screen_width, const std::size_t screen_height,
-           const std::size_t grid_width, const std::size_t grid_height);
+           const std::size_t grid_width, const std::size_t grid_height, const std::size_t players);
   ~Renderer();
 
-  void Render(std::shared_ptr<Snake> snake, Snake_Point const &food);
-  void UpdateWindowTitle(std::string name, int score, int fps);
+  void Render(std::vector<std::shared_ptr<Snake>> snakes, Snake_Point const &food);
+  void UpdateWindowTitle(std::vector<std::pair<std::string, int>> results, int fps);
 
 private:
   SDL_Window *sdl_window;
@@ -24,6 +24,7 @@ private:
   const std::size_t screen_height;
   const std::size_t grid_width;
   const std::size_t grid_height;
+  const std::size_t players;
 };
 
 #endif

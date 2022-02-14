@@ -7,11 +7,28 @@
 #include <string>
 #include <unordered_map>
 
-Game::Game(std::size_t grid_width, std::size_t grid_height, std::string name)
-    : snake(new Snake(grid_width, grid_height, name)), 
-      engine(dev()),
+Game::Game(std::size_t grid_width, std::size_t grid_height, std::size_t players,
+           std::vector<std::string> names)
+    : players(players), engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)) {
+  int x, y;
+  Snake_Point point;
+  std::unordered_set<Snake_Point, Snake_Hash> heads;
+  for (std::size_t i = 0; i < players; ++i) {
+    while (true) {
+      x = random_w(engine);
+      y = random_h(engine);
+      point.x = x;
+      point.y = y;
+      if (heads.find(point) == heads.end()) {
+        snakes.emplace_back(std::make_shared<Snake>(grid_width, grid_height, x,
+                                                    y, names.at(i)));
+        heads.insert(point);
+        break;
+      }
+    }
+  }
   PlaceFood();
 }
 
@@ -28,9 +45,9 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     frame_start = SDL_GetTicks();
 
     // Input, Update, Render - the main game loop.
-    controller.HandleInput(running, snake);
+    controller.HandleInput(running, snakes);
     Update();
-    renderer.Render(snake, food);
+    renderer.Render(snakes, food);
 
     frame_end = SDL_GetTicks();
 
@@ -41,7 +58,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
     // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(GetName(), GetScore(), frame_count);
+      renderer.UpdateWindowTitle(GetResults(), frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
@@ -57,11 +74,18 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
 void Game::PlaceFood() {
   Snake_Point point;
+  bool occupied{false};
   while (true) {
     point.x = random_w(engine);
     point.y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing food.
-    if (!snake->SnakeCell(point)) {
+    // Check that the location is not occupied by a snake item before placing
+    // food.
+    for (std::size_t i = 0; i < players; ++i) {
+      if (snakes.at(i)->SnakeCell(point)) {
+        occupied = true;
+      }
+    }
+    if (!occupied) {
       food = point;
       return;
     }
@@ -69,28 +93,31 @@ void Game::PlaceFood() {
 }
 
 void Game::Update() {
-  if (!snake->alive)
+  if (!CheckAlive()) // all snakes die
     return;
 
-  snake->Update();
-
-  int new_x = static_cast<int>(snake->head_x);
-  int new_y = static_cast<int>(snake->head_y);
-
-  // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
-    snake->AddScore();
-    PlaceFood();
-    // Grow snake and increase speed.
-    snake->GrowBody();
-    snake->speed = 0.16; //+= 0.02;
+  for (std::size_t i = 0; i < players; ++i) {
+    if (snakes.at(i)->alive) {
+      snakes.at(i)->Update();
+      int new_x = static_cast<int>(snakes.at(i)->head_x);
+      int new_y = static_cast<int>(snakes.at(i)->head_y);
+      // Check if there's food over here
+      if (food.x == new_x && food.y == new_y) {
+        snakes.at(i)->AddScore();
+        PlaceFood();
+        // Grow snake and increase speed.
+        snakes.at(i)->GrowBody();
+        snakes.at(i)->speed = 0.16; //+= 0.02;
+      }
+    }
   }
 }
 
 void Game::UpdateRecords() {
   // initialize records_map
-  std::unordered_map<std::string, int> records_map;
-  records_map.insert({GetName(), GetScore()});
+  std::vector<std::pair<std::string, int>> game_results = GetResults();
+  std::unordered_map<std::string, int> records_map(game_results.begin(),
+                                                   game_results.end());
 
   std::string line, key, value;
   int ivalue;
@@ -126,6 +153,36 @@ void Game::UpdateRecords() {
   filestream.close();
 }
 
-int Game::GetSize() const { return snake->size; }
-int Game::GetScore() const { return snake->GetSnakeScore(); }
-std::string Game::GetName() const { return snake->GetSnakeName(); }
+std::vector<int> Game::GetScores() const {
+  std::vector<int> scores;
+  for (std::size_t i = 0; i < players; ++i) {
+    scores.push_back(snakes.at(i)->GetSnakeScore());
+  }
+  return scores;
+}
+
+std::vector<std::string> Game::GetNames() const {
+  std::vector<std::string> names;
+  for (std::size_t i = 0; i < players; ++i) {
+    names.push_back(snakes.at(i)->GetSnakeName());
+  }
+  return names;
+}
+
+std::vector<std::pair<std::string, int>> Game::GetResults() const {
+  std::vector<std::string> names = GetNames();
+  std::vector<int> scores = GetScores();
+  std::vector<std::pair<std::string, int>> results;
+  for (std::size_t i = 0; i < players; ++i) {
+    results.push_back({names.at(i), scores.at(i)});
+  }
+  return results;
+}
+
+bool Game::CheckAlive() const {
+  for (std::size_t i = 0; i < players; ++i) {
+    if (snakes.at(i)->alive)
+      return true;
+  }
+  return false;
+}
