@@ -7,7 +7,7 @@
 class Controller {
 public:
   void HandleInput(bool &running,
-                   std::vector<std::shared_ptr<Snake>> snakes) const;
+                   std::vector<std::shared_ptr<Snake>> &snakes) const;
   Controller(std::size_t players) : players(players) {}
 
 private:

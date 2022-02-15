@@ -6,14 +6,14 @@
 #include <unordered_set>
 #include <vector>
 
+// inherited class with overloaded == operator in order to use hash function
 struct Snake_Point : SDL_Point {
-  // overload == operator in order to use hash function
   bool operator==(const Snake_Point &other) const {
     return (other.x == x) && (other.y == y);
   }
 };
 
-// hash function for Snake_Point
+// hash function for Snake_Point defined by bitwise XOR
 struct Snake_Hash {
   std::size_t operator()(const Snake_Point &point) const {
     return std::hash<int>()(point.x) ^ std::hash<int>()(point.y);
@@ -40,7 +40,7 @@ public:
   float speed{0.1f};
   int size{1};
   bool alive{true};
-  Uint32 time_dead; // time that the snake dies, used for render
+  Uint32 time_dead; // time that the snake is dead, used for render
   float head_x;
   float head_y;
   std::vector<Snake_Point> body;

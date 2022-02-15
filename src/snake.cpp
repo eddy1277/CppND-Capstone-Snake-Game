@@ -1,6 +1,5 @@
 #include "snake.h"
 #include <cmath>
-#include <iostream>
 
 Snake::Snake(int grid_width, int grid_height, float head_x, float head_y,
              std::string name)
@@ -62,7 +61,7 @@ void Snake::UpdateBody(Snake_Point &current_head_cell,
     size++;
   }
 
-  // Check if the snake has died using hash table
+  // Check if the snake is dead using hash table
   if (body_set.find(current_head_cell) != body_set.end()) {
     alive = false;
     time_dead = SDL_GetTicks();

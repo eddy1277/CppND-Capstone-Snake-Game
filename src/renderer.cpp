@@ -62,10 +62,10 @@ void Renderer::RenderOneSnake(std::shared_ptr<Snake> &&snake_ptr,
     block.x = static_cast<int>(snake_ptr->head_x) * block.w;
     block.y = static_cast<int>(snake_ptr->head_y) * block.h;
     SDL_RenderFillRect(sdl_renderer, &block);
-  } // else render nothing
+  } // render nothing after the snake is dead for more than 2 seconds
 }
 
-void Renderer::Render(std::vector<std::shared_ptr<Snake>> snakes,
+void Renderer::Render(std::vector<std::shared_ptr<Snake>> &snakes,
                       Snake_Point const &food) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
@@ -84,18 +84,18 @@ void Renderer::Render(std::vector<std::shared_ptr<Snake>> snakes,
   // Render snake
   std::vector<std::tuple<Uint8, Uint8, Uint8>> body_colors = {
       std::tuple(0xFF, 0xFF, 0xFF),
-      std::tuple(0xFF, 0x7A, 0x7A)}; // white and pink
+      std::tuple(0xFF, 0x7A, 0x7A)}; // white and pink for body
 
   std::vector<std::tuple<Uint8, Uint8, Uint8>> head_colors = {
       std::tuple(0x00, 0x7A, 0xCC),
-      std::tuple(0x00, 0xFF, 0x00)}; // blue and green
+      std::tuple(0x00, 0xFF, 0x00)}; // blue and green for head
 
   std::vector<std::future<void>> futures;
   for (std::size_t i = 0; i < players; ++i) {
     futures.emplace_back(std::async(
         std::launch::async, &Renderer::RenderOneSnake, this, snakes.at(i),
         std::move(block), body_colors.at(i), head_colors.at(i)));
-  }
+  } // move semantics for rvalue
   std::for_each(futures.begin(), futures.end(),
                 [](std::future<void> &ftr) { ftr.wait(); });
 
@@ -104,7 +104,7 @@ void Renderer::Render(std::vector<std::shared_ptr<Snake>> snakes,
 }
 
 void Renderer::UpdateWindowTitle(
-    std::vector<std::pair<std::string, int>> results, std::vector<bool> status,
+    std::vector<std::pair<std::string, int>> &&results, std::vector<bool> &&status,
     int fps) {
   std::string title;
   for (std::size_t i = 0; i < players; ++i) {

@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "controller.h"
 #include "game.h"
 #include "renderer.h"
@@ -15,18 +16,21 @@ int main() {
   std::size_t kPlayers;
   std::string line;
   std::vector<std::string> names;
-  std::cout << "Please select the game mode: 1 for single player mode, 2 for "
+  std::cout << "Please enter the game mode: 1 for single player mode, 2 for "
                "double player mode:\n";
-  do {
+  while (true) {
     std::getline(std::cin, line);
     try {
       kPlayers = std::stoi(line);
-    } catch (...) {
-      std::cerr << "Invalid input. Please select again.\n";
-      kPlayers = 0;
+      if (kPlayers != 1 && kPlayers != 2) {
+        throw std::invalid_argument(
+            "Only 1 player or 2 players are supported. Please reenter.\n");
+      }
+      break;
+    } catch (std::exception &e) {
+      std::cout << e.what() << ". Please reenter.\n";
     }
-  } while (kPlayers != 1 && kPlayers != 2);
-
+  }
   std::vector<std::tuple<std::string, std::string, std::string, std::string,
                          std::string>>
       config = {std::tuple("blue", "left", "right", "up", "down"),

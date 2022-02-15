@@ -1,5 +1,4 @@
 #include "game.h"
-#include "SDL.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -8,7 +7,7 @@
 #include <unordered_map>
 
 Game::Game(std::size_t grid_width, std::size_t grid_height, std::size_t players,
-           std::vector<std::string> names)
+           std::vector<std::string> &names)
     : players(players), engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)) {
@@ -90,7 +89,7 @@ void Game::PlaceFood() {
   }
 }
 
-void Game::UpdateOneSnake(std::shared_ptr<Snake> snake_ptr) {
+void Game::UpdateOneSnake(std::shared_ptr<Snake> &&snake_ptr) {
   if (snake_ptr->alive) {
     snake_ptr->Update();
     int new_x = static_cast<int>(snake_ptr->head_x);
@@ -105,7 +104,7 @@ void Game::UpdateOneSnake(std::shared_ptr<Snake> snake_ptr) {
       snake_ptr->GrowBody();
       snake_ptr->speed += 0.02;
     }
-  }
+  } // if the snake is dead, do nothing
 }
 
 void Game::Update() {
@@ -118,7 +117,7 @@ void Game::Update() {
                 [](std::future<void> &ftr) { ftr.wait(); });
 }
 
-void Game::UpdateRecords() {
+void Game::UpdateRecords() const {
   // initialize records_map
   std::vector<std::pair<std::string, int>> game_results = GetResults();
   std::unordered_map<std::string, int> records_map(game_results.begin(),
@@ -138,8 +137,7 @@ void Game::UpdateRecords() {
     std::replace(key.begin(), key.end(), '_', ' ');
     ivalue = std::stoi(value);
     if (records_map.find(key) != records_map.end()) {
-      records_map[key] =
-          (records_map[key] > ivalue ? records_map[key] : ivalue);
+      records_map[key] = std::max(records_map[key], ivalue);
     } else {
       records_map.insert({key, ivalue});
     }
@@ -148,12 +146,12 @@ void Game::UpdateRecords() {
   std::vector<std::pair<std::string, int>> records_vector(records_map.begin(),
                                                           records_map.end());
   std::sort(records_vector.begin(), records_vector.end(),
-            [](auto &left, auto &right) { return left.second > right.second; });
+            [](auto &a, auto &b) { return a.second > b.second; });
 
   // write the vector records into the file line by line
   filestream.open("records.txt", std::fstream::out | std::fstream::trunc);
-  for (auto &x : records_vector) {
-    filestream << x.first << ":" << x.second << "\n";
+  for (auto &a : records_vector) {
+    filestream << a.first << ":" << a.second << "\n";
   }
   filestream.close();
 }

@@ -22,10 +22,10 @@ public:
   void RenderOneSnake(std::shared_ptr<Snake> &&snake_ptr, SDL_Rect &&block,
                       std::tuple<Uint8, Uint8, Uint8> &&rgb_b,
                       std::tuple<Uint8, Uint8, Uint8> &&rgb_h);
-  void Render(std::vector<std::shared_ptr<Snake>> snakes,
+  void Render(std::vector<std::shared_ptr<Snake>> &snakes,
               Snake_Point const &food);
-  void UpdateWindowTitle(std::vector<std::pair<std::string, int>> results,
-                         std::vector<bool> status, int fps);
+  void UpdateWindowTitle(std::vector<std::pair<std::string, int>> &&results,
+                         std::vector<bool> &&status, int fps);
 
 private:
   SDL_Window *sdl_window;

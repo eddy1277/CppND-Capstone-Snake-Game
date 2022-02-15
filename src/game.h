@@ -5,19 +5,15 @@
 #include "controller.h"
 #include "renderer.h"
 #include "snake.h"
-#include <future>
-#include <memory>
-#include <mutex>
 #include <random>
-#include <thread>
 
 class Game {
 public:
   Game(std::size_t grid_width, std::size_t grid_height, std::size_t players,
-       std::vector<std::string> names);
+       std::vector<std::string> &names);
   void Run(Controller const &controller, Renderer &renderer,
            std::size_t target_frame_duration);
-  void UpdateRecords();
+  void UpdateRecords() const;
   std::vector<int> GetScores() const;
   std::vector<std::string> GetNames() const;
   std::vector<bool> GetStatus() const;
@@ -35,7 +31,7 @@ private:
   std::uniform_int_distribution<int> random_h;
 
   void PlaceFood();
-  void UpdateOneSnake(std::shared_ptr<Snake> snake_ptr);
+  void UpdateOneSnake(std::shared_ptr<Snake> &&snake_ptr);
   void Update();
 };
 

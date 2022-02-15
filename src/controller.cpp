@@ -1,6 +1,5 @@
 #include "controller.h"
 #include "SDL.h"
-#include "snake.h"
 #include <iostream>
 
 void Controller::ChangeDirection(std::shared_ptr<Snake> snake,
@@ -12,7 +11,7 @@ void Controller::ChangeDirection(std::shared_ptr<Snake> snake,
 }
 
 void Controller::HandleInput(bool &running,
-                             std::vector<std::shared_ptr<Snake>> snakes) const {
+                             std::vector<std::shared_ptr<Snake>> &snakes) const {
   SDL_Event e;
   while (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT) {
