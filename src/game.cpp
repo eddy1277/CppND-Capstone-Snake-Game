@@ -103,7 +103,7 @@ void Game::UpdateOneSnake(std::shared_ptr<Snake> snake_ptr) {
       PlaceFood();
       // Grow snake and increase speed.
       snake_ptr->GrowBody();
-      snake_ptr->speed = 0.16; //+= 0.02;
+      snake_ptr->speed += 0.02;
     }
   }
 }

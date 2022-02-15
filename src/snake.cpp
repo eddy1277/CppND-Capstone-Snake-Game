@@ -65,6 +65,7 @@ void Snake::UpdateBody(Snake_Point &current_head_cell,
   // Check if the snake has died using hash table
   if (body_set.find(current_head_cell) != body_set.end()) {
     alive = false;
+    time_dead = SDL_GetTicks();
   }
 }
 

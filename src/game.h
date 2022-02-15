@@ -5,7 +5,6 @@
 #include "controller.h"
 #include "renderer.h"
 #include "snake.h"
-#include <condition_variable>
 #include <future>
 #include <memory>
 #include <mutex>

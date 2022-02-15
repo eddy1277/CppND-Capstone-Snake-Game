@@ -40,6 +40,7 @@ public:
   float speed{0.1f};
   int size{1};
   bool alive{true};
+  Uint32 time_dead; // time that the snake dies, used for render
   float head_x;
   float head_y;
   std::vector<Snake_Point> body;

@@ -37,6 +37,34 @@ Renderer::~Renderer() {
   SDL_Quit();
 }
 
+void Renderer::RenderOneSnake(std::shared_ptr<Snake> &&snake_ptr,
+                              SDL_Rect &&block,
+                              std::tuple<Uint8, Uint8, Uint8> &&rgb_b,
+                              std::tuple<Uint8, Uint8, Uint8> &&rgb_h) {
+  std::lock_guard<std::mutex> uLock(mtx); // lock resource
+  auto [r_b, g_b, b_b] = rgb_b; // RGB of body
+  auto [r_h, g_h, b_h] = rgb_h; // RGB of head
+  if (snake_ptr->alive || SDL_GetTicks() - snake_ptr->time_dead < 2000) {
+    // render body using given color
+    SDL_SetRenderDrawColor(sdl_renderer, r_b, g_b, b_b, 0xFF);
+    for (Snake_Point const &point : snake_ptr->body) {
+      block.x = point.x * block.w;
+      block.y = point.y * block.h;
+      SDL_RenderFillRect(sdl_renderer, &block);
+    }
+    if (snake_ptr->alive) {
+      // render head using given color
+      SDL_SetRenderDrawColor(sdl_renderer, r_h, g_h, b_h, 0xFF);
+    } else {
+      // render head using red color
+      SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0x00, 0x00, 0xFF);
+    }
+    block.x = static_cast<int>(snake_ptr->head_x) * block.w;
+    block.y = static_cast<int>(snake_ptr->head_y) * block.h;
+    SDL_RenderFillRect(sdl_renderer, &block);
+  } // else render nothing
+}
+
 void Renderer::Render(std::vector<std::shared_ptr<Snake>> snakes,
                       Snake_Point const &food) {
   SDL_Rect block;
@@ -53,35 +81,23 @@ void Renderer::Render(std::vector<std::shared_ptr<Snake>> snakes,
   block.y = food.y * block.h;
   SDL_RenderFillRect(sdl_renderer, &block);
 
-  // Render snake's body
-  std::vector<std::tuple<SDL_Renderer *, Uint8, Uint8, Uint8, Uint8>>
-      body_colors = {
-          std::tuple(sdl_renderer, 0xFF, 0xFF, 0xFF, 0xFF),
-          std::tuple(sdl_renderer, 0xFF, 0x7A, 0x7A, 0xFF)}; // white and pink
-  for (std::size_t i = 0; i < players; ++i) {
-    std::apply(SDL_SetRenderDrawColor, body_colors.at(i));
-    for (Snake_Point const &point : snakes.at(i)->body) {
-      block.x = point.x * block.w;
-      block.y = point.y * block.h;
-      SDL_RenderFillRect(sdl_renderer, &block);
-    }
-  }
+  // Render snake
+  std::vector<std::tuple<Uint8, Uint8, Uint8>> body_colors = {
+      std::tuple(0xFF, 0xFF, 0xFF),
+      std::tuple(0xFF, 0x7A, 0x7A)}; // white and pink
 
-  // Render snake's head
-  std::vector<std::tuple<SDL_Renderer *, Uint8, Uint8, Uint8, Uint8>>
-      head_colors = {
-          std::tuple(sdl_renderer, 0x00, 0x7A, 0xCC, 0xFF),
-          std::tuple(sdl_renderer, 0x00, 0xFF, 0x00, 0xFF)}; // blue and green
+  std::vector<std::tuple<Uint8, Uint8, Uint8>> head_colors = {
+      std::tuple(0x00, 0x7A, 0xCC),
+      std::tuple(0x00, 0xFF, 0x00)}; // blue and green
+
+  std::vector<std::future<void>> futures;
   for (std::size_t i = 0; i < players; ++i) {
-    block.x = static_cast<int>(snakes.at(i)->head_x) * block.w;
-    block.y = static_cast<int>(snakes.at(i)->head_y) * block.h;
-    if (snakes.at(i)->alive) {
-      std::apply(SDL_SetRenderDrawColor, head_colors.at(i));
-    } else {
-      SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0x00, 0x00, 0xFF);
-    }
-    SDL_RenderFillRect(sdl_renderer, &block);
+    futures.emplace_back(std::async(
+        std::launch::async, &Renderer::RenderOneSnake, this, snakes.at(i),
+        std::move(block), body_colors.at(i), head_colors.at(i)));
   }
+  std::for_each(futures.begin(), futures.end(),
+                [](std::future<void> &ftr) { ftr.wait(); });
 
   // Update Screen
   SDL_RenderPresent(sdl_renderer);
