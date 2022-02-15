@@ -88,11 +88,13 @@ void Renderer::Render(std::vector<std::shared_ptr<Snake>> snakes,
 }
 
 void Renderer::UpdateWindowTitle(
-    std::vector<std::pair<std::string, int>> results, int fps) {
+    std::vector<std::pair<std::string, int>> results, std::vector<bool> status,
+    int fps) {
   std::string title;
-  for (auto &result : results) {
-    title +=
-        (result.first + "'s Score: " + std::to_string(result.second) + " ");
+  for (std::size_t i = 0; i < players; ++i) {
+    title += (results.at(i).first +
+              "'s Score: " + std::to_string(results.at(i).second) +
+              " (alive: " + std::to_string(status.at(i)) + ") ");
   }
   title += ("FPS: " + std::to_string(fps));
   SDL_SetWindowTitle(sdl_window, title.c_str());

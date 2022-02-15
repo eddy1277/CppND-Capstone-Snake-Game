@@ -24,10 +24,6 @@ class Snake {
 public:
   enum class Direction { kUp, kDown, kLeft, kRight };
 
-  // default constructor
-  Snake() {}
-
-  // non-default constructor
   Snake(int grid_width, int grid_height, float head_x, float head_y,
         std::string name);
 

@@ -15,28 +15,27 @@ int main() {
   std::size_t kPlayers;
   std::string line;
   std::vector<std::string> names;
-  std::cout << "Please select the game mode: 1 for single player mode, 2 for double player mode:\n";
-  do
-  {
+  std::cout << "Please select the game mode: 1 for single player mode, 2 for "
+               "double player mode:\n";
+  do {
     std::getline(std::cin, line);
-    try
-    {
-        kPlayers = std::stoi(line);
-    }
-    catch(...)
-    {
-        std::cerr << "Invalid input. Please select again.\n";
-        kPlayers = 0;
+    try {
+      kPlayers = std::stoi(line);
+    } catch (...) {
+      std::cerr << "Invalid input. Please select again.\n";
+      kPlayers = 0;
     }
   } while (kPlayers != 1 && kPlayers != 2);
-  
-  std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> config = {
-      std::tuple("blue", "left", "right", "up", "down"), std::tuple("green", "z", "c", "s", "x")
-  };
+
+  std::vector<std::tuple<std::string, std::string, std::string, std::string,
+                         std::string>>
+      config = {std::tuple("blue", "left", "right", "up", "down"),
+                std::tuple("green", "z", "c", "s", "x")};
   for (std::size_t i = 0; i < kPlayers; ++i) {
     auto [c, l, r, u, d] = config.at(i);
-    std::cout << "The head of snake " << (i+1) << " has color " << c << ".\n";
-    std::cout << "The Left, Right, Up, Down moves are controlled by keys " << l << ", " << r << ", " << u << ", " << d << ".\n";
+    std::cout << "The head of snake " << (i + 1) << " has color " << c << ".\n";
+    std::cout << "The Left, Right, Up, Down moves are controlled by keys " << l
+              << ", " << r << ", " << u << ", " << d << ".\n";
     std::cout << "Please enter the name of player " << (i + 1) << ":\n";
     std::getline(std::cin, line);
     names.push_back(line);

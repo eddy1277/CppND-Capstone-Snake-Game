@@ -5,8 +5,12 @@
 #include "controller.h"
 #include "renderer.h"
 #include "snake.h"
+#include <condition_variable>
+#include <future>
 #include <memory>
+#include <mutex>
 #include <random>
+#include <thread>
 
 class Game {
 public:
@@ -17,11 +21,13 @@ public:
   void UpdateRecords();
   std::vector<int> GetScores() const;
   std::vector<std::string> GetNames() const;
+  std::vector<bool> GetStatus() const;
   std::vector<std::pair<std::string, int>> GetResults() const;
 
 private:
   std::vector<std::shared_ptr<Snake>> snakes; // vector of shared pointers
   Snake_Point food;
+  std::mutex mtx;
 
   std::size_t players;
   std::random_device dev;
@@ -30,6 +36,7 @@ private:
   std::uniform_int_distribution<int> random_h;
 
   void PlaceFood();
+  void UpdateOneSnake(std::shared_ptr<Snake> snake_ptr);
   void Update();
 };
 

@@ -12,18 +12,16 @@ Game::Game(std::size_t grid_width, std::size_t grid_height, std::size_t players,
     : players(players), engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)) {
-  int x, y;
   Snake_Point point;
   std::unordered_set<Snake_Point, Snake_Hash> heads;
   for (std::size_t i = 0; i < players; ++i) {
     while (true) {
-      x = random_w(engine);
-      y = random_h(engine);
-      point.x = x;
-      point.y = y;
+      // select random point for the head of each snake
+      point.x = random_w(engine);
+      point.y = random_h(engine);
       if (heads.find(point) == heads.end()) {
-        snakes.emplace_back(std::make_shared<Snake>(grid_width, grid_height, x,
-                                                    y, names.at(i)));
+        snakes.emplace_back(std::make_shared<Snake>(
+            grid_width, grid_height, point.x, point.y, names.at(i)));
         heads.insert(point);
         break;
       }
@@ -58,7 +56,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
     // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(GetResults(), frame_count);
+      renderer.UpdateWindowTitle(GetResults(), GetStatus(), frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
@@ -78,7 +76,7 @@ void Game::PlaceFood() {
   while (true) {
     point.x = random_w(engine);
     point.y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing
+    // Check that the location is not occupied by an alive snake before placing
     // food.
     for (std::size_t i = 0; i < players; ++i) {
       if (snakes.at(i)->alive && snakes.at(i)->SnakeCell(point)) {
@@ -92,25 +90,32 @@ void Game::PlaceFood() {
   }
 }
 
-void Game::Update() {
-  bool all_dead = true;  
-  for (std::size_t i = 0; i < players; ++i) {
-    if (snakes.at(i)->alive) {
-      all_dead = false;  
-      snakes.at(i)->Update();
-      int new_x = static_cast<int>(snakes.at(i)->head_x);
-      int new_y = static_cast<int>(snakes.at(i)->head_y);
-      // Check if there's food over here
-      if (food.x == new_x && food.y == new_y) {
-        snakes.at(i)->AddScore();
-        PlaceFood();
-        // Grow snake and increase speed.
-        snakes.at(i)->GrowBody();
-        snakes.at(i)->speed = 0.16; //+= 0.02;
-      }
+void Game::UpdateOneSnake(std::shared_ptr<Snake> snake_ptr) {
+  if (snake_ptr->alive) {
+    snake_ptr->Update();
+    int new_x = static_cast<int>(snake_ptr->head_x);
+    int new_y = static_cast<int>(snake_ptr->head_y);
+    // Check if there's food over here
+    // use mutex to lock the shared resources (Snake_Point food)
+    std::lock_guard<std::mutex> uLock(mtx);
+    if (food.x == new_x && food.y == new_y) {
+      snake_ptr->AddScore();
+      PlaceFood();
+      // Grow snake and increase speed.
+      snake_ptr->GrowBody();
+      snake_ptr->speed = 0.16; //+= 0.02;
     }
   }
-  if (all_dead) return;
+}
+
+void Game::Update() {
+  std::vector<std::future<void>> futures;
+  for (std::size_t i = 0; i < players; ++i) {
+    futures.emplace_back(std::async(std::launch::async, &Game::UpdateOneSnake,
+                                    this, snakes.at(i)));
+  }
+  std::for_each(futures.begin(), futures.end(),
+                [](std::future<void> &ftr) { ftr.wait(); });
 }
 
 void Game::UpdateRecords() {
@@ -167,6 +172,14 @@ std::vector<std::string> Game::GetNames() const {
     names.push_back(snakes.at(i)->GetSnakeName());
   }
   return names;
+}
+
+std::vector<bool> Game::GetStatus() const {
+  std::vector<bool> status;
+  for (std::size_t i = 0; i < players; ++i) {
+    status.push_back(snakes.at(i)->alive);
+  }
+  return status;
 }
 
 std::vector<std::pair<std::string, int>> Game::GetResults() const {
